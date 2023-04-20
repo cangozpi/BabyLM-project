@@ -1,11 +1,9 @@
 import os
 from datasets import load_dataset
 import datasets
-# from torch.utils.data import Dataset
-# import torch
 
 # ------------ Step 1: Dataset&Dataloader
-def get_datasets():
+def load_datasets_from_dir():
     """
     Loads train, dev, test data for babylm strict small dataset and returns the corresponding huggingface DatasetDict
     Returns:
@@ -45,21 +43,27 @@ def get_datasets():
 
 
 # Pre-process dataset (tokenize, concatenate lines, batch)
-def pre_process_dataset(dataset, tokenizer, max_seq_length, batch_size, num_proc):
+def pre_process_dataset(dataset, tokenizer, max_seq_length, map_batch_size, num_proc):
+    """
+    Tokenizes the dataset, concatenates rows in dataset to obtain rows with max_seq_length tokens, 
+    creates labels (targets) for the LM model by shifting the inputs to the left by 1.
+    """
+    max_seq_length += 1 # +1 for compensating since when creating the labels, the sequence length will decrease by 1
+
     def tokenize_function(examples):
         # Remove empty lines
         examples["text"] = [line for line in examples["text"] if len(line) > 0 and not line.isspace()]
         return tokenizer(
             examples["text"],
             truncation=True,
-            max_length=max_seq_length,
+            max_length=max_seq_length, 
         )
 
     tokenized_dataset = dataset.map(
         tokenize_function,
         batched=True,
         num_proc=num_proc,
-        batch_size=batch_size,
+        batch_size=map_batch_size,
         remove_columns=["text"],
         desc="Tokenizing the loaded dataset."
     )
@@ -67,13 +71,13 @@ def pre_process_dataset(dataset, tokenizer, max_seq_length, batch_size, num_proc
     # For the following pre-processing refer to: https://discuss.huggingface.co/t/help-understanding-how-to-build-a-dataset-for-language-as-with-the-old-textdataset/5870/2
     # Main data processing function that will concatenate all texts from
     # our dataset and generate chunks of max_seq_length.
-    def group_texts(examples):
+    def group_texts(batch):
         # Concatenate all texts.
-        concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
-        total_length = len(concatenated_examples[list(examples.keys())[0]])
+        concatenated_examples = {k: sum(batch[k], []) for k in batch.keys()}
+        total_length = len(concatenated_examples[list(batch.keys())[0]])
         # We drop the small remainder, we could add padding if the model supported it instead of this drop,
         # you can customize this part to your needs.
-        total_length = (total_length // max_seq_length) * max_seq_length
+        total_length = (total_length // max_seq_length) * max_seq_length # TODO: padding ? 
         # Split by chunks of max_len.
         result = {
             k: [t[i : i + max_seq_length] for i in range(0, total_length, max_seq_length)]
@@ -87,9 +91,33 @@ def pre_process_dataset(dataset, tokenizer, max_seq_length, batch_size, num_proc
     tokenized_dataset = tokenized_dataset.map(
         group_texts,
         batched=True,
-        batch_size=batch_size,
+        batch_size=map_batch_size,
         num_proc=num_proc,
-        desc="Batching the loaded dataset."
+        desc="Gathering lines in the dataset to entries with max_seq_length sentences."
     )
+
+    # Create labels for LM by shifting the input_ids
+    def create_labels(batch):
+        input_ids = []
+        attention_mask = []
+        labels = []
+        for a, b in zip(batch['input_ids'], batch['attention_mask']):
+            input_ids.append(a[:-1])
+            attention_mask.append(b[:-1])
+            labels.append(a[1:])
+
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels
+        }
+
+    tokenized_dataset = tokenized_dataset.map(
+        create_labels,
+        batched=True,
+        batch_size=map_batch_size,
+        num_proc=num_proc,
+        desc='Creating labels for the dataset.'
+    ) # add labels column to the dataset
 
     return tokenized_dataset
