@@ -10,15 +10,32 @@ pipeline. For the details of the challange, refer to https://babylm.github.io/ .
 
 ### TODO:
 
-1. Dataset&Dataloaders 🔨
-2. Load provided baseline models
-3. Run provided evaluation script from command line
+1. Dataset&Dataloaders ✅
+2. Load provided baseline models and tokenizers ✅
+3. Run provided evaluation script from command line 🔨
 4. Evaluate loaded baseline models using the provided evaluation pipelines from the command line
-5. Train tokenizer on the training data
+5. Train tokenizer on the training data from scratch
 6. Implement a custom model 
 7. Try to train your custom model using your tokenizer and evaluate it
-8. Find papers, create roadmap
+8. Find papers and create a roadmap
 9. Write proposal
+
+---
+
+### Run code:
+* Install dataset
+    ```bash
+    wget https://github.com/babylm/babylm.github.io/raw/main/babylm_data.zip
+    unzip babylm_data.zip -d ./babylm_data
+    ```
+* Install python dependencies
+    ```bash
+        pip install -r requirements.txt
+    ```
+* Running code:
+    ```bash
+    python3 main.py
+    ```
 
 ---
 
