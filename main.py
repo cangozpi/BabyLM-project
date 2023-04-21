@@ -11,7 +11,7 @@ model = AutoModelForSeq2SeqLM.from_pretrained("babylm/t5-base-strict-small")
 # ------------ Step 1: Dataset&Dataloader
 # Load train, validation, test data
 batch_size = 16 # Batch size used for DataLoader
-max_seq_length = 512
+max_seq_length = 20 # fixed length of the sequences (i.e. num tokens per entry)
 map_batch_size = 1000 # batch size used for dataset.map() function during pre-processing
 num_proc = 4
 dataset = load_datasets_from_dir()

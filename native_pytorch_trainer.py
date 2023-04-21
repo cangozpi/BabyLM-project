@@ -5,9 +5,9 @@ import torch
 # Refer to: https://huggingface.co/docs/transformers/training#train
 # Train in Native PyTorch
 def train_in_native_pytorch(tokenized_dataset, model, batch_size):
-    small_train_dataset = tokenized_dataset["train"].shuffle(seed=42).select(range(1)) # TODO: remove this in the future. CANNOT LOAD DATA TO MEMORY WITHOUT THIS!
-    small_validation_dataset = tokenized_dataset["validation"].shuffle(seed=42).select(range(2)) # TODO: remove this in the future. CANNOT LOAD DATA TO MEMORY WITHOUT THIS!
-    # small_test_dataset = tokenized_dataset["test"].shuffle(seed=42).select(range(2)) # TODO: remove this in the future. CANNOT LOAD DATA TO MEMORY WITHOUT THIS!
+    small_train_dataset = tokenized_dataset["train"].shuffle(seed=42)#.select(range(1)) 
+    small_validation_dataset = tokenized_dataset["validation"].shuffle(seed=42)#.select(range(2))
+    # small_test_dataset = tokenized_dataset["test"].shuffle(seed=42)#.select(range(2))
 
     # Convert to PyTorch Datasets and batch them
     small_train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
