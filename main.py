@@ -1,6 +1,5 @@
 from dataset_StrictSmall import load_datasets_from_dir, pre_process_dataset
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from torch.utils.data import DataLoader
 
 
 # -------- Step 2: Load provided baseline model and tokenizer
@@ -18,23 +17,19 @@ num_proc = 4
 dataset = load_datasets_from_dir()
 tokenized_dataset = pre_process_dataset(dataset, tokenizer, max_seq_length, map_batch_size, num_proc)
 
-# Convert to PyTorch Datasets and batch them
-tokenized_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
-train_dataset = DataLoader(tokenized_dataset['train'], batch_size=batch_size, shuffle=True)
-validation_dataset = DataLoader(tokenized_dataset['validation'], batch_size=batch_size, shuffle=False)
-test_dataset = DataLoader(tokenized_dataset['test'], batch_size=batch_size, shuffle=False)
-# Note that at this stage
-#  batch = {
-#   'input_ids': torch.Size([batch_size, max_seq_len])                                            
-#   'attention_mask': torch.Size([batch_size, max_seq_len])
-#   'labels': torch.Size([batch_size, max_seq_len])
-# }
 
 
-# ------------ Step 3: Overfit provided baseline model on the training dataset
-for batch in train_dataset:
-    for k in batch.keys():
-        print(k, batch[k].shape)
-    import sys
-    sys.exit()
-    # TODO: implement this
+training_mode = 'native_pytorch_training'
+assert training_mode in ['native_pytorch_training', 'huggingface_pytorch_Trainer']
+
+
+if training_mode == 'huggingface_pytorch_Trainer': # Train with Huggingface Pytorch Trainer
+    # ------------ Step 3: Training with Huggingface PyTorch Trainer
+    from huggingface_pytorch_trainer import train_with_huggingface_pytorch_trainer
+    train_with_huggingface_pytorch_trainer(tokenized_dataset, model)
+elif training_mode == 'native_pytorch_training': # Train in Native PyTorch
+    # ------------ Step 4: Training in Native Pytorch 
+    from native_pytorch_trainer import train_in_native_pytorch
+    train_in_native_pytorch(tokenized_dataset, model, batch_size)
+
+

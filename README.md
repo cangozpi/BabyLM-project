@@ -12,14 +12,16 @@ pipeline. For the details of the challange, refer to https://babylm.github.io/ .
 
 1. Dataset&Dataloaders ✅
 2. Load provided baseline models and tokenizers ✅
-3. Overfit provided baseline model on the training dataset 🔨
-4. Run provided evaluation script from command line 
-5. Evaluate loaded baseline models using the provided evaluation pipelines from the command line
-6. Train tokenizer on the training data from scratch
-7. Implement a custom model 
-8. Try to train your custom model using your tokenizer and evaluate it
-9. Find papers and create a roadmap
-10. Write proposal
+3. Training with Huggingface PyTorch Trainer ✅
+4. Training in Native Pytorch 🔨
+5. Overfit provided baseline model on the training dataset 
+6. Run provided evaluation script from command line 
+7. Evaluate loaded baseline models using the provided evaluation pipelines from the command line
+8. Train tokenizer on the training data from scratch
+9. Implement a custom model 
+10. Try to train your custom model using your tokenizer and evaluate it
+11. Find papers and create a roadmap
+12. Write proposal
 
 ---
 
