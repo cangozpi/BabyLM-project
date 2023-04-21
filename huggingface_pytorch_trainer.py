@@ -1,8 +1,8 @@
 # Refer to: https://huggingface.co/docs/transformers/training#train
 # Train with Pytorch Trainer
-def train_with_huggingface_pytorch_trainer(tokenized_dataset, model):
-    small_train_dataset = tokenized_dataset["train"].shuffle(seed=42)#.select(range(2))
-    small_eval_dataset = tokenized_dataset["test"].shuffle(seed=42)#.select(range(2))
+def train_with_huggingface_pytorch_trainer(tokenized_dataset, model, num_rows_for_train, num_rows_for_val):
+    small_train_dataset = tokenized_dataset["train"].shuffle(seed=42).select(range(num_rows_for_train))
+    small_eval_dataset = tokenized_dataset["test"].shuffle(seed=42).select(range(num_rows_for_val))
 
     from transformers import TrainingArguments
     training_args = TrainingArguments(output_dir="test_trainer")

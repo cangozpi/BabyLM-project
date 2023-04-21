@@ -4,18 +4,18 @@ import torch
 
 # Refer to: https://huggingface.co/docs/transformers/training#train
 # Train in Native PyTorch
-def train_in_native_pytorch(tokenized_dataset, model, batch_size):
-    small_train_dataset = tokenized_dataset["train"].shuffle(seed=42)#.select(range(1)) 
-    small_validation_dataset = tokenized_dataset["validation"].shuffle(seed=42)#.select(range(2))
-    # small_test_dataset = tokenized_dataset["test"].shuffle(seed=42)#.select(range(2))
+def train_in_native_pytorch(tokenized_dataset, model, batch_size, num_rows_for_train, num_rows_for_val):
+    train_dataset = tokenized_dataset["train"].shuffle(seed=42).select(range(num_rows_for_train)) 
+    validation_dataset = tokenized_dataset["validation"].shuffle(seed=42).select(range(num_rows_for_val))
+    # small_test_dataset = tokenized_dataset["test"].shuffle(seed=42)#.select(range(num_rows))
 
     # Convert to PyTorch Datasets and batch them
-    small_train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
-    small_validation_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+    train_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+    validation_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
     # small_test_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
-    train_dataset = DataLoader(small_train_dataset, batch_size=batch_size, shuffle=True)
-    validation_dataset = DataLoader(small_validation_dataset, batch_size=batch_size, shuffle=False)
+    train_dataset = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    validation_dataset = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False)
     # test_dataset = DataLoader(small_test_dataset, batch_size=batch_size, shuffle=False)
     # Note that at this stage:
     #  batch = {

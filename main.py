@@ -18,6 +18,9 @@ dataset = load_datasets_from_dir()
 tokenized_dataset = pre_process_dataset(dataset, tokenizer, max_seq_length, map_batch_size, num_proc)
 
 
+debug = True  # ------------ Step 5: Overfit provided baseline model on a small subset of the training dataset
+num_rows_for_train = 2 if debug else tokenized_dataset['train'].num_rows # num_rows from dataset['train'] used for training the model
+num_rows_for_val = 2 if debug else tokenized_dataset['validation'].num_rows # num_rows from dataset['validation'] used for validating the model
 
 training_mode = 'native_pytorch_training'
 assert training_mode in ['native_pytorch_training', 'huggingface_pytorch_Trainer']
@@ -26,10 +29,10 @@ assert training_mode in ['native_pytorch_training', 'huggingface_pytorch_Trainer
 if training_mode == 'huggingface_pytorch_Trainer': # Train with Huggingface Pytorch Trainer
     # ------------ Step 3: Training with Huggingface PyTorch Trainer
     from huggingface_pytorch_trainer import train_with_huggingface_pytorch_trainer
-    train_with_huggingface_pytorch_trainer(tokenized_dataset, model)
+    train_with_huggingface_pytorch_trainer(tokenized_dataset, model, num_rows_for_train=num_rows_for_train, num_rows_for_val=num_rows_for_val)
 elif training_mode == 'native_pytorch_training': # Train in Native PyTorch
     # ------------ Step 4: Training in Native Pytorch 
     from native_pytorch_trainer import train_in_native_pytorch
-    train_in_native_pytorch(tokenized_dataset, model, batch_size)
+    train_in_native_pytorch(tokenized_dataset, model, batch_size, num_rows_for_train=num_rows_for_train, num_rows_for_val=num_rows_for_val)
 
 
