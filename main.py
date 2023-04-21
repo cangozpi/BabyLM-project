@@ -35,4 +35,8 @@ elif training_mode == 'native_pytorch_training': # Train in Native PyTorch
     from native_pytorch_trainer import train_in_native_pytorch
     train_in_native_pytorch(tokenized_dataset, model, batch_size, num_rows_for_train=num_rows_for_train, num_rows_for_val=num_rows_for_val)
 
+print("--------------------------evaluation------------------------------")
+from native_pytorch_trainer import evaluate_
+evaluate_(tokenized_dataset["test"], model)
+
 
