@@ -39,7 +39,7 @@ def load_datasets_from_dir():
         'test': test_data_file_paths,
     }
     dataset = load_dataset("text", data_files=data_files)
-    return dataset
+    return train_data_file_paths,dataset
 
 
 # Pre-process dataset (tokenize, concatenate lines, batch)
@@ -56,7 +56,8 @@ def pre_process_dataset(dataset, tokenizer, max_seq_length, map_batch_size, num_
         return tokenizer(
             examples["text"],
             truncation=True,
-            max_length=max_seq_length, 
+            max_length=max_seq_length,
+            return_special_tokens_mask=True,
         )
 
     tokenized_dataset = dataset.map(
