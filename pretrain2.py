@@ -10,7 +10,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
 train_data, dataset = load_datasets_from_dir()
-tokenizer = AutoTokenizer.from_pretrained("t5-small")
+#tokenizer = AutoTokenizer.from_pretrained("t5-small")
 batch_size = 32
 total_batches = len(dataset['train']) // batch_size
 
