@@ -1,6 +1,7 @@
 
 from transformers import T5Tokenizer, T5Model, RobertaModel, RobertaTokenizer, RobertaConfig, \
-    DataCollatorForLanguageModeling, TrainingArguments, Trainer, GPT2Model, GPT2Config, T5ForConditionalGeneration
+    DataCollatorForLanguageModeling, TrainingArguments, Trainer, GPT2Model, GPT2Config, T5ForConditionalGeneration, \
+    T5Config
 
 from dataset_StrictSmall import load_datasets_from_dir, pre_process_dataset
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
@@ -34,11 +35,12 @@ num_rows_for_val = tokenized_dataset['validation'].num_rows
 
 small_train_dataset = tokenized_dataset["train"].shuffle(seed=42).select(range(num_rows_for_train))
 small_eval_dataset = tokenized_dataset["test"].shuffle(seed=42).select(range(num_rows_for_val))
+tokenizer.save_pretrained("t5_small/")
 
+model_config = T5Config()
+model = T5ForConditionalGeneration(T5Config)
 
-#model_config = DistilGPT2Config()
-
-model = T5ForConditionalGeneration.from_pretrained("t5-small")
+#model = T5ForConditionalGeneration.from_pretrained("t5-small")
 
 #tokenizer.pad_token = tokenizer.eos_token
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
@@ -66,3 +68,4 @@ trainer = Trainer(
     eval_dataset=small_eval_dataset,
 )
 trainer.train()
+model.save_pretrained("t5_small/")
