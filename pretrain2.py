@@ -14,14 +14,16 @@ train_data, dataset = load_datasets_from_dir()
 batch_size = 32
 total_batches = len(dataset['train']) // batch_size
 
-tokenizer = spm.SentencePieceTrainer.train(
+spm.SentencePieceTrainer.train(
     input=train_data,
     model_prefix="spiece",
     vocab_size=30000,
     model_type="unigram",
     train_extremely_large_corpus=True,
 )
-tokenizer.save("t5_smallspm/")
+tokenizer = spm.SentencePieceProcessor()
+tokenizer.load("spiece.model")
+#tokenizer.save("t5_smallspm/")
 
 print("-----------tokenizing--------------")
 batch_size = 16  # Batch size used for DataLoader
