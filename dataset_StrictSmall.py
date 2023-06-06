@@ -39,7 +39,7 @@ def load_datasets_from_dir():
         'test': test_data_file_paths,
     }
     dataset = load_dataset("text", data_files=data_files)
-    return train_data_file_paths,dataset
+    return train_data_file_paths, dataset
 
 
 # Pre-process dataset (tokenize, concatenate lines, batch)
@@ -57,7 +57,7 @@ def pre_process_dataset(dataset, tokenizer, max_seq_length, map_batch_size, num_
             examples["text"],
             truncation=True,
             max_length=max_seq_length,
-            return_special_tokens_mask=True,
+            #return_special_tokens_mask=True,
         )
 
     tokenized_dataset = dataset.map(
@@ -102,15 +102,18 @@ def pre_process_dataset(dataset, tokenizer, max_seq_length, map_batch_size, num_
         input_ids = []
         attention_mask = []
         labels = []
+        decoder_input_ids = []
         for a, b in zip(batch['input_ids'], batch['attention_mask']):
             input_ids.append(a[:-1])
             attention_mask.append(b[:-1])
             labels.append(a[1:])
+            decoder_input_ids.append(a[:-1])  # Add this line
 
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
-            'labels': labels
+            'labels': labels,
+            'decoder_input_ids': decoder_input_ids  # Add this line
         }
 
     tokenized_dataset = tokenized_dataset.map(

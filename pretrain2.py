@@ -46,8 +46,8 @@ small_eval_dataset = tokenized_dataset["test"].shuffle(seed=42).select(range(num
 config = T5Config(vocab_size=30000)
 model = T5ForConditionalGeneration(config=config)
 
-from huggingface_pytorch_trainer import train_with_huggingface_pytorch_trainer
-train_with_huggingface_pytorch_trainer(tokenized_dataset, model, num_rows_for_train=num_rows_for_train, num_rows_for_val=num_rows_for_val)
+#from huggingface_pytorch_trainer import train_with_huggingface_pytorch_trainer
+#train_with_huggingface_pytorch_trainer(tokenized_dataset, model, num_rows_for_train=num_rows_for_train, num_rows_for_val=num_rows_for_val)
 # from native_pytorch_trainer import train_in_native_pytorch
 # train_in_native_pytorch(tokenized_dataset, model, batch_size, num_rows_for_train=num_rows_for_train,
 #                         num_rows_for_val=num_rows_for_val)
