@@ -16,14 +16,16 @@ total_batches = len(dataset['train']) // batch_size
 
 spm.SentencePieceTrainer.train(
     input=train_data,
-    model_prefix="spiece",
-    vocab_size=30000,
-    model_type="unigram",
-    train_extremely_large_corpus=True,
+     model_prefix="spiece",
+     vocab_size=30000,
+     model_type="unigram",
+     train_extremely_large_corpus=True,
 )
-tokenizer = spm.SentencePieceProcessor()
-tokenizer.load("spiece.model")
-#tokenizer.save("t5_smallspm/")
+
+sp = spm.SentencePieceProcessor()
+sp.load('spiece.model')
+tokenizer = T5Tokenizer(vocab_file='spiece.model')
+
 
 print("-----------tokenizing--------------")
 batch_size = 16  # Batch size used for DataLoader
@@ -38,35 +40,47 @@ num_rows_for_val = tokenized_dataset['validation'].num_rows
 small_train_dataset = tokenized_dataset["train"].shuffle(seed=42).select(range(num_rows_for_train))
 small_eval_dataset = tokenized_dataset["test"].shuffle(seed=42).select(range(num_rows_for_val))
 
-
 #model_config = DistilGPT2Config()
 
 #model = T5ForConditionalGeneration.from_pretrained("t5-small")
-model = T5Model(T5Config)
-#tokenizer.pad_token = tokenizer.eos_token
-data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+config = T5Config(vocab_size=30000)
+model = T5ForConditionalGeneration(config=config)
 
-print(small_train_dataset[0])
-training_args = TrainingArguments(
-    output_dir='data/',          # output directory to where save model checkpoint
-    evaluation_strategy="steps",    # evaluate each `logging_steps` steps
-    overwrite_output_dir=True,
-    num_train_epochs=1,            # number of training epochs, feel free to tweak
-    per_device_train_batch_size=16, # the training batch size, put it as high as your GPU memory fits
-    gradient_accumulation_steps=8,  # accumulating the gradients before updating the weights
-    per_device_eval_batch_size=64,  # evaluation batch size
-    logging_steps=1000,             # evaluate, log and save model checkpoints every 1000 step
-    save_steps=1000,
-    # load_best_model_at_end=True,  # whether to load the best model (in terms of loss) at the end of training
-    # save_total_limit=3,           # whether you don't have much space so you let only 3 model weights saved in the disk
-)
-print("-----------training--------------")
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    data_collator=data_collator,
-    train_dataset=small_train_dataset,
-    eval_dataset=small_eval_dataset,
-)
-trainer.train()
+from huggingface_pytorch_trainer import train_with_huggingface_pytorch_trainer
+train_with_huggingface_pytorch_trainer(tokenized_dataset, model, num_rows_for_train=num_rows_for_train, num_rows_for_val=num_rows_for_val)
+# from native_pytorch_trainer import train_in_native_pytorch
+# train_in_native_pytorch(tokenized_dataset, model, batch_size, num_rows_for_train=num_rows_for_train,
+#                         num_rows_for_val=num_rows_for_val)
+
+# data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+#
+#
+# training_args = TrainingArguments(
+#     output_dir='data/',          # output directory to where save model checkpoint
+#     evaluation_strategy="epoch",
+# )
+# print("-----------training--------------")
+# trainer = Trainer(
+#     model=model,
+#     args=training_args,
+#     data_collator=data_collator,
+#     train_dataset=small_train_dataset,
+#     eval_dataset=small_eval_dataset,
+# )
+# trainer.train()
+
+
+# from torch.optim import AdamW
+# optimizer = AdamW(model.parameters(), lr=5e-5)
+#
+# from transformers import get_scheduler
+#
+# num_epochs = 1
+# num_training_steps = num_epochs * len(small_train_dataset)
+# lr_scheduler = get_scheduler(
+#         name="linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=num_training_steps
+# )
+
+
+
 model.save_pretrained("t5_smallspm/")
