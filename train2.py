@@ -65,28 +65,6 @@ def preprocess_logits_for_metrics(logits, labels):
     return logits.argmax(dim=-1)
 
 
-
-def compute_loss(model, inputs):
-    # Get the input sequences and target sequences
-    input_ids = inputs["input_ids"]
-    target_ids = inputs["target_ids"]
-
-    # Compute the model's predicted probabilities
-    logits = model(input_ids).logits
-
-    # Flatten the logits and target_ids for loss computation
-    logits = logits.view(-1, logits.size(-1))
-    target_ids = target_ids.view(-1)
-
-    # Compute the negative log likelihood loss
-    loss_fn = nn.CrossEntropyLoss()
-    loss = loss_fn(logits, target_ids)
-
-    return loss
-
-
-
-
 training_args = TrainingArguments(
     output_dir="results2",
     evaluation_strategy="epoch",
