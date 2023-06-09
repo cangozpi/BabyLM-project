@@ -73,6 +73,7 @@ training_args = TrainingArguments(
     output_dir="results1",
     evaluation_strategy="epoch",
     num_train_epochs=1,
+    save_total_limit=10
 )
 
 
@@ -90,6 +91,6 @@ trainer = Trainer(
 
 trainer.train()
 trainer.save_model("t5result")
-trainer.save_model()
-evaluation_results = trainer.evaluate()
+trainer.save_state()
+evaluation_results = trainer.evaluate(eval_dataset=small_eval_dataset)
 print(evaluation_results)
