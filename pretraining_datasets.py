@@ -35,6 +35,8 @@ def load_datasets_from_dir(dataset_names: Dict = None , streaming=False):
 
     if dataset_names is None: # load in all the available data files
         train_data_file_paths = get_dataset_file_paths(train_data_dir, '.train')
+        dev_data_file_paths = get_dataset_file_paths(dev_data_dir, '.dev')
+        test_data_file_paths = get_dataset_file_paths(test_data_dir, '.test')
         data_files =  {
             'train': train_data_file_paths,
             'validation': dev_data_file_paths,

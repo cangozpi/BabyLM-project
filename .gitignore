@@ -2,3 +2,4 @@ __pycache__
 babylm_data*
 __MACOSX
 my_pretraining_output-huggingface-ds
+save_dir
