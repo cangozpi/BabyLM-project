@@ -3,7 +3,7 @@ from datasets import load_dataset
 import datasets
 
 # ------------ Step 1: Dataset&Dataloader
-def load_datasets_from_dir():
+def load_datasets_from_dir(streaming=False):
     """
     Loads train, dev, test data for babylm strict small dataset and returns the corresponding huggingface DatasetDict
     Returns:
@@ -38,7 +38,7 @@ def load_datasets_from_dir():
         'validation': dev_data_file_paths,
         'test': test_data_file_paths,
     }
-    dataset = load_dataset("text", data_files=data_files)
+    dataset = load_dataset("text", data_files=data_files, streaming=streaming)
     return dataset
 
 
