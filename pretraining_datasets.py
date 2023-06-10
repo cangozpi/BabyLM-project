@@ -95,8 +95,10 @@ def get_data_collator(task, tokenizer, mlm_probability=0.15):
     """
     assert task in ['clm', 'mlm']
     # TODO: not sure about using tokenizer.eos_token as pad_token and mask_token as done below !
-    tokenizer.pad_token = tokenizer.eos_token # specify pad_token for the tokenizer which will be used for causal LM data collator
-    tokenizer.mask_token = tokenizer.eos_token # specify pad_token for the tokenizer which will be used for causal LM data collator
+    if (tokenizer.pad_token is None) and (tokenizer.eos_token is not None):
+        tokenizer.pad_token = tokenizer.eos_token # specify pad_token for the tokenizer which will be used for causal LM data collator
+    if (tokenizer.mask_token is None) and (tokenizer.eos_token is not None):
+        tokenizer.mask_token = tokenizer.eos_token # specify pad_token for the tokenizer which will be used for causal LM data collator
     if task == 'clm':
         # This will pad the inputs to the length of the longest element in the batch, 
         # also creates labels for causal language modeling task as specified by mlm=False
