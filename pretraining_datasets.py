@@ -42,7 +42,7 @@ def load_datasets_from_dir(dataset_names: Dict = None , streaming=False):
         }
     else: # load in specified data files
         data_files = {}
-        for split_name, file_names in train_dataset_names.items():
+        for split_name, file_names in dataset_names.items():
             if split_name == 'train':
                 file_names = list(map(lambda x: train_data_dir + x, file_names))
             if split_name == 'validation':
