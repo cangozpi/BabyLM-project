@@ -55,10 +55,10 @@ if __name__ == "__main__":
     batch_size = 128 # batch_size parameter of tokenizer.train_new_from_iterator() function
     train_dataset = load_datasets_from_dir(dataset_names=None, streaming=False)['train']
     tokenizer_save_path = "./save_dir/saved_tokenizer"
+    tokenizer_model_or_path = "gpt2" # 124M parameters, smallest version of GPT2
     # -------------------------------------
 
     # Get tokenizer for the model
-    tokenizer_model_or_path = "gpt2" # 124M parameters, smallest version of GPT2
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_or_path)
     print("Old tokenizer:", tokenizer, "\n", "-"*50)
     # print(tokenizer("just some dummy text", return_special_tokens_mask=True))

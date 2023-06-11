@@ -55,3 +55,6 @@ if torch_training == True:  # Train the model using PyTorch Training Loop
 
 else: # Train the model using HuggingFace Trainer
     train_for_num_epochs_in_huggingface_trainer(train_dataset_names, model, tokenizer, pretraining_task, batch_size, num_epochs)
+
+
+# TODO: get test_loss of the trained model
