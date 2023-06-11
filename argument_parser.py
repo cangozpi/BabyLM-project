@@ -28,6 +28,7 @@ parser.add_argument("-ts_tok", "--train_and_save_tokenizer", default=False, help
 parser.add_argument("-l", "--length", type=int, help = "num rows from dataset to process while training the tokenizer.")
 parser.add_argument("-vs", "--vocab_size", type=int, help = "newly trained tokenizer's target vocabulary size.")
 parser.add_argument("-tok_bs", "--tokenizer_batch_size", type=int, help = "batch_size parameter of tokenizer.train_new_from_iterator() function.")
+parser.add_argument("--tokenizer_model_max_length", default=1024, type=int, help = "sets tokenizer.model_max_length parameter of the newly created tokenizer. This determines the truncation length during preprocessing the dataset using this tokenizer.")
 parser.add_argument('--train_dataset_file_names', nargs='*', default=None, type=str, help = "names of the dataset files to load into training dataset.")
 parser.add_argument('--validation_dataset_file_names', nargs='*', default=None, type=str, help = "names of the dataset files to load into validation dataset.")
 parser.add_argument('--test_dataset_file_names', nargs='*', default=None, type=str, help = "names of the dataset files to load into test dataset.")
@@ -90,7 +91,7 @@ if args['train_and_save_tokenizer']:
 
     train_dataset = load_datasets_from_dir(dataset_names=dataset_names, streaming=False)['train']
     new_tokenizer = train_tokenizer_on_corpus(args['tokenizer_model'], args['length'], \
-        args['vocab_size'], args['tokenizer_batch_size'], train_dataset)
+        args['vocab_size'], args['tokenizer_batch_size'], train_dataset, args['tokenizer_model_max_length'])
     # save the trained tokenizer
     save_tokenizer_to_path(new_tokenizer, args['tokenizer_save_or_load_path'])
     print(f'Successfully trained the tokenizer: {new_tokenizer}, and saved the tokenizer to path: {args["tokenizer_save_or_load_path"]}')
@@ -165,7 +166,7 @@ if args['load_model_load_tokenizer_and_train'] == 'True':
     # Train the model
     if args['torch_training'] == 'True':  # Train the model using PyTorch Training Loop
         # Get Pretraining DataLoaders
-        train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=False)
+        train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=True)
         print('-'*50,f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}\n','-'*50)
 
         # Train the model using pytorch training loop

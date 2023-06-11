@@ -3,7 +3,7 @@ from pretraining_datasets import load_datasets_from_dir
 from tqdm.auto import tqdm
 import numpy as np
 
-def train_tokenizer_on_corpus(tokenizer_model_or_path, length, vocab_size, batch_size, train_dataset):
+def train_tokenizer_on_corpus(tokenizer_model_or_path, length, vocab_size, batch_size, train_dataset, model_max_length):
     """
     Loads in the specified tokenizer and then trains it to have vocabulary size of vocab_size, 
         using length many rows from the specified dataset.
@@ -18,7 +18,7 @@ def train_tokenizer_on_corpus(tokenizer_model_or_path, length, vocab_size, batch
     if train_dataset.num_rows < length:
         raise Exception('length cannot be larger than the rows in the train_dataset!')
     # Load in tokenizer
-    old_tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_or_path)
+    old_tokenizer = AutoTokenizer.from_pretrained(tokenizer_model_or_path, model_max_length=model_max_length)
 
     idx = np.random.choice(np.arange(train_dataset.num_rows), length, replace=False)
     train_dataset = train_dataset.select(idx)

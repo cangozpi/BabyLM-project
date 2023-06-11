@@ -1,6 +1,6 @@
 train_tokenizer:
 	python3 argument_parser.py --train_and_save_tokenizer True \
-	--length 1000 --vocab_size 1000 --tokenizer_batch_size 20 \
+	--length 1000 --vocab_size 1000 --tokenizer_batch_size 20 --tokenizer_model_max_length 128 \
 	--train_dataset_file_names aochildes.train bnc_spoken.train \
 	--validation_dataset_file_names aochildes.dev \
 	--test_dataset_file_names aochildes.test \
