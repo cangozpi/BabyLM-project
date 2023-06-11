@@ -18,7 +18,7 @@ class CustomPreTrainingTransformerModel(PreTrainedModel):
 
     def __init__(self, config):
         super().__init__(config)
-        assert pretraining_task in ['clm', 'mlm']
+        assert config.pretraining_task in ['clm', 'mlm']
         self.num_labels = config.num_labels
 
         self.encoder = AutoModel.from_config(config)
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     }
     from pretraining_datasets import get_DataLoaders
     from pytorch_training_loop import train_for_num_epochs_in_pytorch_loop
-    train_dataloader, _, _ = get_DataLoaders(train_dataset_names, tokenizer, task='clm', batch_size=2, num_workers=0)
+    train_dataloader, _, _ = get_DataLoaders(train_dataset_names, tokenizer, task='clm', batch_size=2, num_workers=0, return_small_debug_dataset=True)
 
     # Train the model using pytorch training loop
     # model = train_for_num_epochs_in_pytorch_loop(train_dataloader, model, 1)

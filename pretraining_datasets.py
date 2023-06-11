@@ -114,7 +114,7 @@ def get_data_collator(task, tokenizer, mlm_probability=0.15):
         return masked_lm_pretraining_task_collator
 
 
-def get_DataLoaders(train_dataset_names, tokenizer, task='clm', batch_size=32, num_workers=0):
+def get_DataLoaders(train_dataset_names, tokenizer, task='clm', batch_size=32, num_workers=0, return_small_debug_dataset=False):
     """
     Returns 3 dataloaders(train_dataloader, validation_dataloader, test_dataloader) for the chosen pretraining task given the dataset, tokenizer, and other params.
     Inputs:
@@ -134,6 +134,10 @@ def get_DataLoaders(train_dataset_names, tokenizer, task='clm', batch_size=32, n
     raw_dataset = load_datasets_from_dir(dataset_names=train_dataset_names, streaming=False)
     # Tokenize dataset
     tokenized_dataset = tokenize_dataset(raw_dataset, tokenizer)
+    if return_small_debug_dataset:
+        tokenized_dataset['train'] = tokenized_dataset['train'].select(range(40))
+        tokenized_dataset['validation'] = tokenized_dataset['validation'].select(range(40))
+        tokenized_dataset['test'] = tokenized_dataset['test'].select(range(40))
     # Get data collator function for the chosen pretraining task (Causal LM, Masked LM)
     pretraining_task_data_collator = get_data_collator(task, tokenizer)
     #

@@ -5,10 +5,22 @@ from tqdm.auto import tqdm
 import numpy as np
 
 
+
+def save_checkpoint(ckpt_path, model):
+    # Save model and its config
+    model.save_model_and_config(ckpt_path)
+
+
 # Refer to: https://huggingface.co/docs/transformers/training#train
 # Train in Native PyTorch
-def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs):
-    optimizer = AdamW(model.parameters(), lr=5e-5)
+def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr=3e-4, grad_norm_clip=1.0, validation_dataloader=None, ckpt_path='save_dir/training_loop_ckpt'):
+    # GPU support
+    device = 'cpu'
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+        model = model.to(device)
+
+    optimizer = AdamW(model.parameters(), lr=lr)
 
     num_training_steps = num_epochs * len(train_dataloader)
     lr_scheduler = get_scheduler(
@@ -18,26 +30,58 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs):
     # Train Model
     # progress_bar = tqdm(range(num_training_steps), desc="Training model")
     model.train()
+    best_loss = float("inf")
     for epoch in range(num_epochs):
         losses = []
         with tqdm(train_dataloader, unit="batch") as progress_bar:
             for batch in progress_bar:
-                progress_bar.set_description(f"Epoch {epoch}/{num_epochs}")
+                # Place data on the correct device
+                if device != "cpu":
+                    for k, v in batch.items():
+                        batch[k] = v.to(device)
+
+                progress_bar.set_description(f"Training: Epoch {epoch}/{num_epochs}")
 
                 outputs = model(**batch) # batch is {'input_ids': ..., 'attention_mask': ..., 'labels': ...}
                 loss = outputs.loss
 
                 optimizer.zero_grad()
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_norm_clip)
                 optimizer.step()
                 lr_scheduler.step()
                 # progress_bar.update(1)
 
                 losses.append(loss.detach().cpu().item())
-                progress_bar.set_postfix(loss=loss.detach().cpu().item())
+                progress_bar.set_postfix(loss=np.mean(losses))
                 # progress_bar.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
 
-            print(f'Training | epoch: {epoch}, loss: {np.mean(losses)}')
+        val_losses = []
+        if validation_dataloader is not None:
+            with tqdm(validation_dataloader, unit="batch") as progress_bar:
+                for batch in progress_bar:
+                    # Place data on the correct device
+                    if device != "cpu":
+                        for k, v in batch.items():
+                            batch[k] = v.to(device)
+
+                    progress_bar.set_description(f"Validation: Epoch {epoch}/{num_epochs}")
+
+                    with torch.no_grad():
+                        outputs = model(**batch) # batch is {'input_ids': ..., 'attention_mask': ..., 'labels': ...}
+                    val_loss = outputs.loss
+
+
+                    val_losses.append(val_loss.detach().cpu().item())
+                    progress_bar.set_postfix(loss=np.mean(val_losses))
+                    # progress_bar.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
+        val_loss = np.mean(val_losses)
+        # Support early stopping, or just save model if validation data is not provided
+        if (val_loss < best_loss) or (ckpt_path is None):
+            best_loss = val_loss
+            save_checkpoint(ckpt_path+f"/{epoch}", model)
+            print(f'Saving model checkpoint to path: {ckpt_path+f"/{epoch}"}, val_loss: {val_loss}')
+
     
 
     # Evaluate Model
