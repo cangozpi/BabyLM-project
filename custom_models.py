@@ -85,6 +85,7 @@ if __name__ == "__main__":
     # config = AutoConfig.from_pretrained("bert-base-uncased")
     config = AutoConfig.from_pretrained(model_name)
     config.num_labels = tokenizer.vocab_size # make model's vocabulary size match the tokenizer's vocab size
+    config.vocab_size = tokenizer.vocab_size # make model's vocabulary size match the tokenizer's vocab size
     config.pretraining_task = pretraining_task
     # config['add_pooling_layer'] = False
 

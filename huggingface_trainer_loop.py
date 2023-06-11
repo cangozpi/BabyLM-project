@@ -3,7 +3,7 @@ from transformers import Trainer, TrainingArguments
 import evaluate
 import numpy as np
 
-def train_for_num_epochs_in_huggingface_trainer(train_dataset_names, model, tokenizer, pretraining_task, batch_size, num_epochs):
+def train_for_num_epochs_in_huggingface_trainer(train_dataset_names, model, tokenizer, pretraining_task, batch_size, num_epochs, log_dir, lr=5e-4):
     # Get huggingface dataset
     raw_dataset = load_datasets_from_dir(dataset_names=train_dataset_names, streaming=False)
     tokenized_dataset = tokenize_dataset(raw_dataset, tokenizer)
@@ -13,7 +13,6 @@ def train_for_num_epochs_in_huggingface_trainer(train_dataset_names, model, toke
 
     # Get compute_metrics function to evaluate model performance
     compute_metrics = get_compute_metrics_fn()
-    print(compute_metrics)
 
     # Train the model using HuggingFace Trainer
     args = TrainingArguments(
@@ -21,15 +20,17 @@ def train_for_num_epochs_in_huggingface_trainer(train_dataset_names, model, toke
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         evaluation_strategy="steps",
-        eval_steps=5_000,
-        logging_steps=5_000,
+        eval_steps=100,
+        logging_steps=100,
+        logging_dir=log_dir,
         gradient_accumulation_steps=8,
         num_train_epochs=num_epochs,
         weight_decay=0.1,
         warmup_steps=1_000,
         lr_scheduler_type="cosine",
-        learning_rate=5e-4,
+        learning_rate=lr,
         save_steps=5_000,
+        load_best_model_at_end=True,
         # fp16=True,
         # push_to_hub=True,
     )
@@ -46,6 +47,10 @@ def train_for_num_epochs_in_huggingface_trainer(train_dataset_names, model, toke
     )
 
     trainer.train()
+    # Save the model
+    # trainer.save_model(log_dir+"/best_model_ckpt")
+    trained_model = trainer.model.module if hasattr(trainer.model, 'module') else trainer.model  # Handle distributed/parallel training
+    trained_model.save_model_and_config(model_save_path=log_dir+"/best_model_ckpt")
 
 
 def get_compute_metrics_fn():
