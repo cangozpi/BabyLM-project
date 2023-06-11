@@ -19,7 +19,7 @@ class CustomPreTrainingTransformerModel(PreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         assert config.pretraining_task in ['clm', 'mlm']
-        self.num_labels = config.num_labels
+        self.num_labels = config.num_labels # equals vocab_size of tokenizer/model
 
         self.encoder = AutoModel.from_config(config)
 
@@ -31,8 +31,16 @@ class CustomPreTrainingTransformerModel(PreTrainedModel):
         self.loss_fn = torch.nn.CrossEntropyLoss()
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, labels=None, **kwargs):
+        # Handle DataCollatorForLM returning labels the same as inputs and the requirement for model to internally handle shifting labels:
+        # Note that this shifting of labels is only required for causal language modeling objective, NOT for masked language modeling objective.
+        if self.config.pretraining_task == 'clm':
+            labels = labels[..., 1:].contiguous() # --> [B, T-1]
+            input_ids = input_ids[..., :-1].contiguous() # --> [B, T-1], leave out last element since we don't know its label (what comes after it)
+            attention_mask = attention_mask[..., :-1].contiguous() # --> [B, T-1], leave out attention for last element since we don't know its label (what comes after it)
+
         # Use model body to get encoder representations
-        outputs = self.encoder(input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids, **kwargs)
+        # For the parameters that self.encoder takes refer to: https://huggingface.co/docs/transformers/main/model_doc/gpt2#transformers.GPT2Model
+        outputs = self.encoder(input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids,output_attentions=False, **kwargs)
         last_hidden_state = outputs['last_hidden_state']
         # Apply classification head to encoder representations
         logits = self.head(last_hidden_state)

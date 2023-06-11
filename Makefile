@@ -6,13 +6,25 @@ train_tokenizer:
 	--test_dataset_file_names aochildes.test \
 	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" --tokenizer_model gpt2
 
-create_model_load_tokenizer_train_and_save_model_with_custom_torch_training_loop:
+create_gpt2_model_load_tokenizer_train_and_save_model_with_custom_torch_training_loop:
 	python3 argument_parser.py --create_model_load_tokenizer_train_and_save_model True \
 	--torch_training True \
 	--train_dataset_file_names aochildes.train bnc_spoken.train \
 	--validation_dataset_file_names aochildes.dev \
 	--test_dataset_file_names aochildes.test \
 	--transformer_model_name gpt2 --pretraining_task clm \
+	--training_batch_size 16 --num_workers 0 \
+	-lr "3e-5" --grad_norm_clip 1.0 --num_epochs 3 \
+	--model_checkpoint_path "./save_dir/training_loop_ckpt" 
+
+
+create_bert_model_load_tokenizer_train_and_save_model_with_custom_torch_training_loop:
+	python3 argument_parser.py --create_model_load_tokenizer_train_and_save_model True \
+	--torch_training True \
+	--train_dataset_file_names aochildes.train bnc_spoken.train \
+	--validation_dataset_file_names aochildes.dev \
+	--test_dataset_file_names aochildes.test \
+	--transformer_model_name bert-base-uncased --pretraining_task mlm \
 	--training_batch_size 16 --num_workers 0 \
 	-lr "3e-5" --grad_norm_clip 1.0 --num_epochs 3 \
 	--model_checkpoint_path "./save_dir/training_loop_ckpt" 

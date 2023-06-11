@@ -127,7 +127,7 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
     # Train the model
     if args['torch_training'] == 'True':  # Train the model using PyTorch Training Loop
         # Get Pretraining DataLoaders
-        train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=False)
+        train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=True)
         print('-'*50,f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}\n','-'*50)
 
         # Train the model using pytorch training loop
@@ -159,7 +159,8 @@ if args['load_model_load_tokenizer_and_train'] == 'True':
 
     # Load Model:
     model = CustomPreTrainingTransformerModel.load_saved_model(model_save_path=args['model_load_path'])
-    print(f'Successfully loaded model: {model}\n','-'*50)
+    model_size = sum(t.numel() for t in model.parameters())
+    print(f'Successfully loaded model: {model} with size: {model_size/1000**2:.1f}M parameters\n','-'*50)
 
     # Train the model
     if args['torch_training'] == 'True':  # Train the model using PyTorch Training Loop
