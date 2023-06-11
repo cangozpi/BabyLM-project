@@ -90,7 +90,7 @@ if args['train_and_save_tokenizer']:
 
     train_dataset = load_datasets_from_dir(dataset_names=dataset_names, streaming=False)['train']
     new_tokenizer = train_tokenizer_on_corpus(args['tokenizer_model'], args['length'], \
-        args['vocab_size'], args['training_batch_size'], train_dataset)
+        args['vocab_size'], args['tokenizer_batch_size'], train_dataset)
     # save the trained tokenizer
     save_tokenizer_to_path(new_tokenizer, args['tokenizer_save_or_load_path'])
     print(f'Successfully trained the tokenizer: {new_tokenizer}, and saved the tokenizer to path: {args["tokenizer_save_or_load_path"]}')
