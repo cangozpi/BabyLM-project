@@ -72,6 +72,24 @@ load_model_load_tokenizer_and_test:
 
 
 
+# ------------ Some Utilities: 
+# ------------ For downloading and extracting the dataset files:
+download_and_extract_dataset:
+	wget https://github.com/babylm/babylm.github.io/raw/main/babylm_data.zip
+	unzip babylm_data.zip
+
+
+# ------------ For starting TensorBoard:
+start_tensorboard:
+	tensorboard --logdir save_dir/
+
+
+
+
+
+
+
+
 # ------------ Extra info/examples: 
 # An example for training a model using huggingface Trainer instead of my custom torch training loop implementation:
 create_model_load_tokenizer_train_and_save_model_with_huggingface_trainer_loop:
@@ -91,14 +109,11 @@ create_model_load_tokenizer_train_and_save_model_with_huggingface_trainer_loop:
 
 
 # ====================================================================== FOR EXPERIMENTS:
-all_training_dataset_file_names=aochildes.train gutenberg.train switchboard.train bnc_spoken.train open_subtitles.train wikipedia.train cbt.train qed.train
-children_stories.train  simple_wikipedia.train
-all_dev_dataset_file_names=aochildes.dev gutenberg.dev switchboard.dev bnc_spoken.dev open_subtitles.dev wikipedia.dev cbt.dev qed.dev
-children_stories.dev  simple_wikipedia.dev
-all_test_dataset_file_names=aochildes.test gutenberg.test switchboard.test bnc_spoken.test open_subtitles.test wikipedia.test cbt.test qed.test
-children_stories.test  simple_wikipedia.test
-easier_training_dataset_file_names=XXX
-harder_training_dataset_file_names=XXX
+all_training_dataset_file_names=aochildes.train gutenberg.train switchboard.train bnc_spoken.train open_subtitles.train wikipedia.train cbt.train qed.train children_stories.train  simple_wikipedia.train
+all_dev_dataset_file_names=aochildes.dev gutenberg.dev switchboard.dev bnc_spoken.dev open_subtitles.dev wikipedia.dev cbt.dev qed.dev children_stories.dev  simple_wikipedia.dev
+all_test_dataset_file_names=aochildes.test gutenberg.test switchboard.test bnc_spoken.test open_subtitles.test wikipedia.test cbt.test qed.test children_stories.test  simple_wikipedia.test
+easier_training_dataset_file_names=aochildes.train open_subtitles.train qed.train simple_wikipedia.train switchboard.train
+harder_training_dataset_file_names=bnc_spoken.train cbt.train children_stories.train gutenberg.train wikipedia.train
 
 step1: # Train a small tokenizer
 	python3 argument_parser.py --train_and_save_tokenizer True \
