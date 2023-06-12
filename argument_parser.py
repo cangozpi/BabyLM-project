@@ -63,6 +63,9 @@ parser.add_argument("-nw", "--num_workers", type=int, default=0, help = "DataLoa
 parser.add_argument("-lr", "--learning_rate", type=str, default="1e-3", help = "Learning Rate used for training the model.")
 parser.add_argument("--grad_norm_clip", type=float, default=1.0, help = "Gradient norm clipping parameter.")
 parser.add_argument("-model_ckpt_path", "--model_checkpoint_path", type=str, default='./save_dir/training_loop_ckpt', help = "Path to save the model checkpoints during training.")
+parser.add_argument("--hidden_size", type=int, default=768, help = "The hidden size of the model (defaults to 768).")
+parser.add_argument("--num_attention_heads", type=int, default=12, help = "The number of attention heads used in the multi-head attention layers of the model (defaults to 12).")
+parser.add_argument("--num_hidden_layers", type=int, default=12, help = "The number of blocks in the model (defaults to 12).")
 
 
 # Load model, and load tokenizer and train them (curriculum learning support) arguments:
@@ -121,6 +124,17 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
     config.num_labels = tokenizer.vocab_size # make model's vocabulary size match the tokenizer's vocab size
     config.vocab_size = tokenizer.vocab_size # make model's vocabulary size match the tokenizer's vocab size
     config.pretraining_task = args['pretraining_task']
+    # Setting Autoconfig parameters
+    # Refer to: https://huggingface.co/docs/transformers/v4.30.0/en/main_classes/configuration#transformers.PretrainedConfig ,
+    # https://huggingface.co/docs/transformers/model_doc/gpt2#transformers.GPT2Config , and https://huggingface.co/docs/transformers/model_doc/bert#transformers.BertConfig
+    if config.model_type == 'gpt2': # GPT2Config overrides these parameters of PretrainedConfig so we handle it specially
+        config.n_embd = args['hidden_size'] # The hidden size of the model (defaults to 768)
+        config.n_head = args['num_attention_heads'] # The number of attention heads used in the multi-head attention layers of the model (defaults to 12)
+        config.n_layer = args['num_hidden_layers'] #  The number of blocks in the model (defaults to 12)
+    else:
+        config.hidden_size = args['hidden_size'] # The hidden size of the model (defaults to 768)
+        config.num_attention_heads = args['num_attention_heads'] # The number of attention heads used in the multi-head attention layers of the model (defaults to 12)
+        config.num_hidden_layers = args['num_hidden_layers'] #  The number of blocks in the model (defaults to 12)
     # config.add_pooling_layer = False
 
     # Initialize Model from the config for the specified pretraining_task

@@ -15,6 +15,7 @@ create_gpt2_model_load_tokenizer_train_and_save_model_with_custom_torch_training
 	--transformer_model_name gpt2 --pretraining_task clm \
 	--training_batch_size 16 --num_workers 0 \
 	-lr "3e-5" --grad_norm_clip 1.0 --num_epochs 3 \
+	--hidden_size 256 --num_attention_heads 4 --num_hidden_layers 4 \
 	--model_checkpoint_path "./save_dir/training_loop_ckpt" 
 
 
@@ -27,6 +28,7 @@ create_bert_model_load_tokenizer_train_and_save_model_with_custom_torch_training
 	--transformer_model_name bert-base-uncased --pretraining_task mlm \
 	--training_batch_size 16 --num_workers 0 \
 	-lr "3e-5" --grad_norm_clip 1.0 --num_epochs 3 \
+	--hidden_size 256 --num_attention_heads 4 --num_hidden_layers 4 \
 	--model_checkpoint_path "./save_dir/training_loop_ckpt" 
 
 create_model_load_tokenizer_train_and_save_model_with_huggingface_trainer_loop:
@@ -38,6 +40,7 @@ create_model_load_tokenizer_train_and_save_model_with_huggingface_trainer_loop:
 	--transformer_model_name gpt2 --pretraining_task clm \
 	--training_batch_size 16 --num_workers 0 \
 	-lr "5e-4" --grad_norm_clip 1.0 --num_epochs 3 \
+	--hidden_size 256 --num_attention_heads 4 --num_hidden_layers 4 \
 	--model_checkpoint_path "./save_dir/training_loop_ckpt" 
 
 load_model_load_tokenizer_train_with_custom_torch_training_loop:
