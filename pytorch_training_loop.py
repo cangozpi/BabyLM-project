@@ -27,6 +27,7 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
             def log_scalar_to_tb(self, tag, scalar_value):
                 pass
         logger = Dummy_Logger()
+
     # GPU support
     device = 'cpu'
     if torch.cuda.is_available():
@@ -118,6 +119,94 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
     # metric.comute()
 
     return model
+
+# def evaluate_(tokenized_test, model):
+#     import evaluate
+#     accuracy_metric = evaluate.load("accuracy")
+#     precision_metric = evaluate.load("precision")
+#     recall_metric = evaluate.load("recall")
+#     bleu = evaluate.load("bleu")
+#     f1_metric = evaluate.load("f1")
+#     model.eval()
+#     for batch in tokenized_test:
+# #       batch = {k: v.to(device) for k, v in batch.items()}
+#         with torch.no_grad():
+#              outputs = model(**batch)
+#              logits = outputs.logits
+#              predictions = torch.argmax(logits, dim=-1)
+#              accuracy_result = accuracy_metric.compute(predictions=predictions, references=batch["labels"])
+#              precision_result = precision_metric.compute(predictions=predictions, references=batch["labels"])
+#              recall_result = recall_metric.compute(predictions=predictions, references=batch["labels"])
+#              bleu_result = bleu.compute(predictions=predictions, refrences=batch["labels"])
+#              f1_result = f1_metric.compute(predictions=predictions, refrences=batch["labels"])
+
+#         print("accuracy: {}, precision {}, recall {}, bleu {}, f1 {}".format(accuracy_result, precision_result, recall_result, bleu_result, f1_result))
+
+
+
+
+# Test model in Native PyTorch
+def test_model(test_dataloader, model, ckpt_path='save_dir/testing', logger=None):
+    if logger is None:
+        class Dummy_Logger:
+            def __init__(self, *args, **kwargs):
+                pass
+            def log_msg_to_console(self, msg):
+                pass
+            def log_dict_to_file(self, info_dict):
+                pass
+            def log_to_file(self, entity):
+                pass
+            def log_scalar_to_tb(self, tag, scalar_value):
+                pass
+        logger = Dummy_Logger()
+
+    # GPU support
+    device = 'cpu'
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+        model = model.to(device)
+    logger.log_msg_to_console(f'using device: {device}')
+    logger.log_to_file(f'using device: {device}')
+
+
+    # Test Model
+    model.eval()
+    best_loss = float("inf")
+    losses = []
+    with tqdm(test_dataloader, unit="batch") as progress_bar:
+        for batch in progress_bar:
+            # Place data on the correct device
+            if device != "cpu":
+                for k, v in batch.items():
+                    batch[k] = v.to(device)
+
+            outputs = model(**batch) # batch is {'input_ids': ..., 'attention_mask': ..., 'labels': ...}
+            loss = outputs.loss
+
+            losses.append(loss.detach().cpu().item())
+            progress_bar.set_postfix(loss=np.mean(losses))
+    logger.log_scalar_to_tb(tag='Testing/Loss', scalar_value=np.mean(losses))
+    logger.log_msg_to_console(f'Testing/Loss: {np.mean(losses)}')
+    logger.log_to_file(f'Testing/Loss: {np.mean(losses)}')
+
+    return loss
+
+    # Evaluate Model
+    # import evaluate
+    # metric = evaluate.load("accuracy")
+    # model.eval()
+    # for batch in validation_dataset:
+    #     # batch = {k: v.to(device) for k, v in batch.items()}
+    #     with torch.no_grad():
+    #         outputs = model(**batch)
+
+    #     logits = outputs.logits
+    #     predictions = torch.argmax(logits, dim=-1)
+    #     metric.add_batch(predictions=predictions, references=batch["labels"])
+
+    # metric.comute()
+
 
 # def evaluate_(tokenized_test, model):
 #     import evaluate

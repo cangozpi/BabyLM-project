@@ -2,7 +2,7 @@ from utils import set_seed, Logger
 import argparse
 from pretraining_datasets import load_datasets_from_dir
 from tokenizer import train_tokenizer_on_corpus, save_tokenizer_to_path
-from pytorch_training_loop import train_for_num_epochs_in_pytorch_loop
+from pytorch_training_loop import train_for_num_epochs_in_pytorch_loop, test_model
 from tokenizer import load_tokenizer_from_path
 from transformers import AutoConfig
 from custom_models import CustomPreTrainingTransformerModel
@@ -71,9 +71,13 @@ parser.add_argument("--num_hidden_layers", type=int, default=12, help = "The num
 # Load model, and load tokenizer and train them (curriculum learning support) arguments:
 # ------------------------- Loading Model and tokenizer, and training Parameters:
 parser.add_argument("--load_model_load_tokenizer_and_train", default=False, help = "If True, model and tokenizer is loaded from path, and trained.")
-parser.add_argument("-model_load_path", "--model_load_path", type=str, default='./save_dir/training_loop_ckpt', help = "Path to load the saved model from checkpoints saved during training.")
+parser.add_argument("-model_load_path", "--model_load_path", type=str, default='./save_dir/training_loop_ckpt', help = "Path to load the saved model from checkpoints saved during training. Also used for logging directory by the Logger.")
 
 
+# Load model, and load tokenizer and test them arguments:
+# ------------------------- Loading Model and tokenizer, and testing Parameters:
+parser.add_argument("--load_model_load_tokenizer_and_test", default=False, help = "If True, model and tokenizer is loaded from path, and tested on test dataset.")
+parser.add_argument("-test_bs", "--testing_batch_size", type=int, help = "DataLoader's batch size.")
 
 # Parse the arguments
 args = vars(parser.parse_args())
@@ -168,8 +172,6 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
     logger.log_msg_to_console('Training finished.')
 
 
-
-
 # ================================================== 
 # Load model, tokenizer and train:
 if args['load_model_load_tokenizer_and_train'] == 'True':
@@ -209,4 +211,44 @@ if args['load_model_load_tokenizer_and_train'] == 'True':
     else: # Train the model using HuggingFace Trainer
         train_for_num_epochs_in_huggingface_trainer(dataset_names, model, tokenizer, args['pretraining_task'], args['training_batch_size'], args['num_epochs'], args['model_checkpoint_path']+"/hugginface_trainer", float(args['learning_rate']))
 
+    logger.log_to_file('Training finished.')
+    logger.log_msg_to_console('Training finished.')
 
+
+
+
+# ================================================== 
+# Load model, tokenizer and test :
+if args['load_model_load_tokenizer_and_test'] == 'True':
+    # Get reference to a Logger
+    logger = Logger(log_file_name=args['model_checkpoint_path']+'/logs/logger.logs', tb_log_dir=args['model_checkpoint_path']+'/logs/tb_logs')
+    logger.log_dict_to_file(args)
+
+    # Get Datasets to use
+    dataset_names = None
+    if args['test_dataset_file_names'] is not None:
+        dataset_names = { # Specify which files to use during training (useful for curriculum learning)
+            'train': ['aochildes.train'],
+            'validation': ['aochildes.dev'],
+            'test': args['test_dataset_file_names']
+        }
+
+    # Load the saved tokenizer
+    tokenizer = load_tokenizer_from_path(args['tokenizer_save_or_load_path'])
+    logger.log_msg_to_console(f'Loaded tokenizer: {tokenizer}')
+
+    # Load Model:
+    model = CustomPreTrainingTransformerModel.load_saved_model(model_save_path=args['model_load_path'])
+    model_size = sum(t.numel() for t in model.parameters())
+    logger.log_to_file(f'Successfully loaded model: {model} \nwith size: {model_size/1000**2:.1f}M parameters')
+
+    # Get Testing DataLoader
+    _, _, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['testing_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=True)
+    logger.log_msg_to_console(f'\nDataloaders:\n\ttest_dataloader.length: {len(test_dataloader)}')
+    logger.log_to_file(f'\nDataloaders:\n\ttest_dataloader.length: {len(test_dataloader)}')
+
+    # Test the model:
+    test_loss = test_model(test_dataloader, model, logger=logger)
+
+    logger.log_to_file('Testing finished.')
+    logger.log_msg_to_console('Testing finished.')
