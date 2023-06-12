@@ -1,4 +1,4 @@
-from utils import set_seed
+from utils import set_seed, Logger
 import argparse
 from pretraining_datasets import load_datasets_from_dir
 from tokenizer import train_tokenizer_on_corpus, save_tokenizer_to_path
@@ -78,13 +78,15 @@ parser.add_argument("-model_load_path", "--model_load_path", type=str, default='
 # Parse the arguments
 args = vars(parser.parse_args())
 
-
 # Set seed for reproducibility
 set_seed(args['seed'])
 
 # ================================================== 
 # Train and save tokenizer:
 if args['train_and_save_tokenizer']:
+    # Get reference to a Logger
+    logger = Logger(log_file_name=args['tokenizer_save_or_load_path']+'/logs/logger.logs', tb_log_dir=None)
+
     # train the tokenizer
     dataset_names = None
     if args['train_dataset_file_names'] is not None:
@@ -101,12 +103,17 @@ if args['train_and_save_tokenizer']:
         args['vocab_size'], args['tokenizer_batch_size'], train_dataset, args['tokenizer_model_max_length'])
     # save the trained tokenizer
     save_tokenizer_to_path(new_tokenizer, args['tokenizer_save_or_load_path'])
-    print(f'Successfully trained the tokenizer: {new_tokenizer}, and saved the tokenizer to path: {args["tokenizer_save_or_load_path"]}')
+    logger.log_msg_to_console(f'Successfully trained the tokenizer: {new_tokenizer}, and saved the tokenizer to path: {args["tokenizer_save_or_load_path"]}')
+    logger.log_dict_to_file(args) # log passed in args into a file
 
 
 # ================================================== 
 # Create model, load tokenizer, and save model after training:
 if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
+    # Get reference to a Logger
+    logger = Logger(log_file_name=args['model_checkpoint_path']+'/logs/logger.logs', tb_log_dir=args['model_checkpoint_path']+'/logs/tb_logs')
+    logger.log_dict_to_file(args)
+
     # Get Datasets to use
     dataset_names = None
     if args['train_dataset_file_names'] is not None:
@@ -117,10 +124,9 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
             'test': args['test_dataset_file_names']
         }
 
-    print(f'Using dataset_names: {dataset_names if dataset_names is not None else "Loading all of the available .train, .dev, .test dataset files."}')
     # Load the saved tokenizer
     tokenizer = load_tokenizer_from_path(args['tokenizer_save_or_load_path'])
-    print(f'Loaded tokenizer: {tokenizer}\n', "-"*50)
+    logger.log_msg_to_console(f'Loaded tokenizer: {tokenizer}')
 
     # Initialize Model:
     # Create Config for the transformer model
@@ -141,19 +147,25 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
         config.num_hidden_layers = args['num_hidden_layers'] #  The number of blocks in the model (defaults to 12)
     # config.add_pooling_layer = False
 
+    logger.log_to_file(config)
     # Initialize Model from the config for the specified pretraining_task
     model = CustomPreTrainingTransformerModel(config)
+    logger.log_to_file(model)
     # Train the model
     if args['torch_training'] == 'True':  # Train the model using PyTorch Training Loop
         # Get Pretraining DataLoaders
         train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=True)
-        print('-'*50,f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}\n','-'*50)
+        logger.log_msg_to_console(f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}')
+        logger.log_to_file(f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}')
 
         # Train the model using pytorch training loop
-        model = train_for_num_epochs_in_pytorch_loop(train_dataloader, model, args['num_epochs'], float(args['learning_rate']), args['grad_norm_clip'], validation_dataloader, args['model_checkpoint_path'])
+        model = train_for_num_epochs_in_pytorch_loop(train_dataloader, model, args['num_epochs'], float(args['learning_rate']), args['grad_norm_clip'], validation_dataloader, args['model_checkpoint_path'], logger=logger)
 
     else: # Train the model using HuggingFace Trainer
         train_for_num_epochs_in_huggingface_trainer(dataset_names, model, tokenizer, args['pretraining_task'], args['training_batch_size'], args['num_epochs'], args['model_checkpoint_path']+"/hugginface_trainer", float(args['learning_rate']))
+
+    logger.log_to_file('Training finished.')
+    logger.log_msg_to_console('Training finished.')
 
 
 
@@ -161,6 +173,10 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
 # ================================================== 
 # Load model, tokenizer and train:
 if args['load_model_load_tokenizer_and_train'] == 'True':
+    # Get reference to a Logger
+    logger = Logger(log_file_name=args['model_checkpoint_path']+'/logs/logger.logs', tb_log_dir=args['model_checkpoint_path']+'/logs/tb_logs')
+    logger.log_dict_to_file(args)
+
     # Get Datasets to use
     dataset_names = None
     if args['train_dataset_file_names'] is not None:
@@ -171,26 +187,26 @@ if args['load_model_load_tokenizer_and_train'] == 'True':
             'test': args['test_dataset_file_names']
         }
 
-    print(f'Using dataset_names: {dataset_names if dataset_names is not None else "Loading all of the available .train, .dev, .test dataset files."}')
     # Load the saved tokenizer
     tokenizer = load_tokenizer_from_path(args['tokenizer_save_or_load_path'])
-    print(f'Loaded tokenizer: {tokenizer}\n', "-"*50)
+    logger.log_msg_to_console(f'Loaded tokenizer: {tokenizer}')
 
     # Load Model:
     model = CustomPreTrainingTransformerModel.load_saved_model(model_save_path=args['model_load_path'])
     model_size = sum(t.numel() for t in model.parameters())
-    print(f'Successfully loaded model: {model} with size: {model_size/1000**2:.1f}M parameters\n','-'*50)
+    logger.log_to_file(f'Successfully loaded model: {model} \nwith size: {model_size/1000**2:.1f}M parameters')
 
     # Train the model
     if args['torch_training'] == 'True':  # Train the model using PyTorch Training Loop
         # Get Pretraining DataLoaders
         train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=True)
-        print('-'*50,f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}\n','-'*50)
+        logger.log_msg_to_console(f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}')
+        logger.log_to_file(f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}')
 
         # Train the model using pytorch training loop
-        model = train_for_num_epochs_in_pytorch_loop(train_dataloader, model, args['num_epochs'], float(args['learning_rate']), args['grad_norm_clip'], validation_dataloader, args['model_checkpoint_path'])
+        model = train_for_num_epochs_in_pytorch_loop(train_dataloader, model, args['num_epochs'], float(args['learning_rate']), args['grad_norm_clip'], validation_dataloader, args['model_checkpoint_path'], logger=logger)
 
     else: # Train the model using HuggingFace Trainer
         train_for_num_epochs_in_huggingface_trainer(dataset_names, model, tokenizer, args['pretraining_task'], args['training_batch_size'], args['num_epochs'], args['model_checkpoint_path']+"/hugginface_trainer", float(args['learning_rate']))
 
-# TODO: Load Model from path, and Load tokenizer form path.
+

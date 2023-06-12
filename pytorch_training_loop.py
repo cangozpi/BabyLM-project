@@ -13,12 +13,27 @@ def save_checkpoint(ckpt_path, model):
 
 # Refer to: https://huggingface.co/docs/transformers/training#train
 # Train in Native PyTorch
-def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr=3e-4, grad_norm_clip=1.0, validation_dataloader=None, ckpt_path='save_dir/training_loop_ckpt'):
+def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr=3e-4, grad_norm_clip=1.0, validation_dataloader=None, ckpt_path='save_dir/training_loop_ckpt', logger=None):
+    if logger is None:
+        class Dummy_Logger:
+            def __init__(self, *args, **kwargs):
+                pass
+            def log_msg_to_console(self, msg):
+                pass
+            def log_dict_to_file(self, info_dict):
+                pass
+            def log_to_file(self, entity):
+                pass
+            def log_scalar_to_tb(self, tag, scalar_value):
+                pass
+        logger = Dummy_Logger()
     # GPU support
     device = 'cpu'
     if torch.cuda.is_available():
         device = torch.cuda.current_device()
         model = model.to(device)
+    logger.log_msg_to_console(f'using device: {device}')
+    logger.log_to_file(f'using device: {device}')
 
     optimizer = AdamW(model.parameters(), lr=lr)
 
@@ -55,6 +70,7 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
                 losses.append(loss.detach().cpu().item())
                 progress_bar.set_postfix(loss=np.mean(losses))
                 # progress_bar.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
+        logger.log_scalar_to_tb(tag='Training/Loss (epoch)', scalar_value=np.mean(losses))
 
         val_losses = []
         if validation_dataloader is not None:
@@ -76,11 +92,13 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
                     progress_bar.set_postfix(loss=np.mean(val_losses))
                     # progress_bar.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
         val_loss = np.mean(val_losses)
+        logger.log_scalar_to_tb(tag='Validation/Loss (epoch)', scalar_value=val_loss)
         # Support early stopping, or just save model if validation data is not provided
         if (val_loss < best_loss) or (ckpt_path is None):
             best_loss = val_loss
             save_checkpoint(ckpt_path+f"/{epoch}", model)
-            print(f'Saving model checkpoint to path: {ckpt_path+f"/{epoch}"}, val_loss: {val_loss}')
+            logger.log_msg_to_console(f'Saving model checkpoint to path: {ckpt_path+f"/{epoch}"}, val_loss: {val_loss}')
+            logger.log_to_file(f'Saving model checkpoint to path: {ckpt_path+f"/{epoch}"}, val_loss: {val_loss}')
 
     
 
