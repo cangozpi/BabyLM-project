@@ -1,3 +1,4 @@
+from utils import set_seed
 import argparse
 from pretraining_datasets import load_datasets_from_dir
 from tokenizer import train_tokenizer_on_corpus, save_tokenizer_to_path
@@ -11,8 +12,6 @@ from huggingface_trainer_loop import train_for_num_epochs_in_huggingface_trainer
 
 parser = argparse.ArgumentParser(description="Train and load tokenizers, transformer models.")
 
-parser.add_argument("-f", "--flip", metavar="IMAGE_FLIP", help = "Path to your input image")
-parser.add_argument("-i", "--image", metavar="IMAGE", default="001.jpg", help = "Path to your input image")
 
 # Add tokenizer arguments:
 # ------------------------- Tokenizer Training Parameters:
@@ -34,6 +33,7 @@ parser.add_argument('--validation_dataset_file_names', nargs='*', default=None, 
 parser.add_argument('--test_dataset_file_names', nargs='*', default=None, type=str, help = "names of the dataset files to load into test dataset.")
 parser.add_argument("-tok_pth", "--tokenizer_save_or_load_path", default="./save_dir/saved_tokenizer", help = "path to save/load the trained tokenizer.")
 parser.add_argument("-tok_mdl", "--tokenizer_model", default="gpt2", help = "tokenizer model or path to load.")
+parser.add_argument("--seed", type=int, default=42, help = "Seed to set random, numpy, and torch for reproducibility.")
 
 # Add create model, load tokenizer, train and save model arguments:
 # ------------------------- Create model, load tokenizer, train and save model Parameters:
@@ -77,6 +77,10 @@ parser.add_argument("-model_load_path", "--model_load_path", type=str, default='
 
 # Parse the arguments
 args = vars(parser.parse_args())
+
+
+# Set seed for reproducibility
+set_seed(args['seed'])
 
 # ================================================== 
 # Train and save tokenizer:

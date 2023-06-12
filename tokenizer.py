@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, set_seed, pipeline, AutoModelForCausalLM
+from transformers import AutoTokenizer, pipeline, AutoModelForCausalLM
 from pretraining_datasets import load_datasets_from_dir
 from tqdm.auto import tqdm
 import numpy as np
@@ -14,7 +14,6 @@ def train_tokenizer_on_corpus(tokenizer_model_or_path, length, vocab_size, batch
     Returns:
         tokenizer: tokenizer trained from scratch on the specified corpus
     """
-    set_seed(42)
     if train_dataset.num_rows < length:
         raise Exception('length cannot be larger than the rows in the train_dataset!')
     # Load in tokenizer
