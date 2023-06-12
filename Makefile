@@ -76,7 +76,7 @@ load_model_load_tokenizer_and_test:
 # ------------ For downloading and extracting the dataset files:
 download_and_extract_dataset:
 	wget https://github.com/babylm/babylm.github.io/raw/main/babylm_data.zip
-	unzip babylm_data.zip
+	unzip babylm_data.zip -d babylm_data
 
 
 # ------------ For starting TensorBoard:
@@ -161,6 +161,12 @@ step3_2: # Train using curriculum learning approach 1 cont.(train on harder data
 	--training_batch_size 16 --num_workers 0 \
 	-lr "3e-5" --grad_norm_clip 1.0 --num_epochs 3 
 
+step3_3: # Test the small GPT model with curriculum learning
+	python3 argument_parser.py --load_model_load_tokenizer_and_test  True \
+	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" \
+	--model_load_path "./save_dir/step3_2/training_loop_resumed_ckpt/small_gpt_hard_datasets/2" --pretraining_task clm \
+	--model_checkpoint_path "./save_dir/step3_3/testing" \
+	--testing_batch_size 16 --num_workers 0
 
 step4_1: # Train a small BERT model
 	python3 argument_parser.py --create_model_load_tokenizer_train_and_save_model True \
@@ -203,6 +209,14 @@ step5_2: # Train using curriculum learning approach 1 cont.(train on harder data
 	--pretraining_task mlm \
 	--training_batch_size 16 --num_workers 0 \
 	-lr "3e-5" --grad_norm_clip 1.0 --num_epochs 3 
+
+step5_3: # Test the small BERT model with curriculum learning
+	python3 argument_parser.py --load_model_load_tokenizer_and_test  True \
+	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" \
+	--model_load_path "./save_dir/step5_2/training_loop_resumed_ckpt/small_bert_hard_datasets/2" --pretraining_task mlm \
+	--model_checkpoint_path "./save_dir/step5_3/testing" \
+	--testing_batch_size 16 --num_workers 0
+
 
 
 best_model_name=gpt2 # choose the best model model to scale up

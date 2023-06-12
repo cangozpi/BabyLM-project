@@ -75,8 +75,10 @@ def tokenize_dataset(raw_dataset, tokenizer):
         )
         input_batch = []
         for length, input_ids in zip(outputs["length"], outputs["input_ids"]):
-            input_batch.append(input_ids)
-        return {"input_ids": input_batch}
+            if length > 3:
+                input_batch.append(input_ids)
+        if len(input_batch) > 0:
+            return {"input_ids": input_batch}
 
     tokenized_dataset = raw_dataset.map(
         tokenize, batched=True, remove_columns=raw_dataset["train"].column_names
