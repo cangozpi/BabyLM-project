@@ -158,7 +158,7 @@ if args['create_model_load_tokenizer_train_and_save_model'] == 'True':
     # Train the model
     if args['torch_training'] == 'True':  # Train the model using PyTorch Training Loop
         # Get Pretraining DataLoaders
-        train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=True)
+        train_dataloader, validation_dataloader, test_dataloader = get_DataLoaders(dataset_names, tokenizer, task=args['pretraining_task'], batch_size=args['training_batch_size'], num_workers=args['num_workers'], return_small_debug_dataset=False)
         logger.log_msg_to_console(f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}')
         logger.log_to_file(f'\nDataloaders:\n\ttrain_dataloader.length: {len(train_dataloader)},\n\tvalidation_dataloader.length: {len(validation_dataloader)},\n\ttest_dataloader.length: {len(test_dataloader)}')
 
