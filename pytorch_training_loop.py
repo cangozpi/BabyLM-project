@@ -46,6 +46,7 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
     # Train Model
     # progress_bar = tqdm(range(num_training_steps), desc="Training model")
     model.train()
+    loss_list = []
     best_loss = float("inf")
     for epoch in range(num_epochs):
         losses = []
@@ -59,8 +60,10 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
                 progress_bar.set_description(f"Training: Epoch {epoch}/{num_epochs}")
 
                 outputs = model(**batch) # batch is {'input_ids': ..., 'attention_mask': ..., 'labels': ...}
+                #print("outputs: ", outputs)
                 loss = outputs.loss
-
+                #loss_list.append(loss)
+                #print(loss)
                 optimizer.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), grad_norm_clip)
@@ -70,7 +73,9 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
 
                 losses.append(loss.detach().cpu().item())
                 progress_bar.set_postfix(loss=np.mean(losses))
+
                 # progress_bar.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
+        print(model.per_input_losses)
         logger.log_scalar_to_tb(tag='Training/Loss (epoch)', scalar_value=np.mean(losses))
 
         val_losses = []
@@ -100,8 +105,6 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
             save_checkpoint(ckpt_path+f"/{epoch}", model)
             logger.log_msg_to_console(f'Saving model checkpoint to path: {ckpt_path+f"/{epoch}"}, val_loss: {val_loss}')
             logger.log_to_file(f'Saving model checkpoint to path: {ckpt_path+f"/{epoch}"}, val_loss: {val_loss}')
-
-    
 
     # Evaluate Model
     # import evaluate
