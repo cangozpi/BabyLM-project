@@ -235,7 +235,7 @@ step6_1: # Scale up best model (e.g. increase hidden_dims, batch_size, learning 
 step6_2: # Test the scaled up best model
 	python3 argument_parser.py --load_model_load_tokenizer_and_test  True \
 	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" \
-	--model_load_path "./save_dir/step6_1/training_loop_resumed_ckpt/scaled_model_whole_datasets/5" \
+	--model_load_path "./save_dir/step6_1/training_loop_ckpt/scaled_model_whole_datasets/5" \
 	--pretraining_task ${best_model_pretraining_task} \
 	--model_checkpoint_path "./save_dir/step6_2/testing" \
 	--testing_batch_size 16 --num_workers 0
@@ -253,7 +253,7 @@ step7_1: # Scale up best model and train using curriculum learning approach 1(tr
 	--hidden_size 256 --num_attention_heads 8 --num_hidden_layers 5 \
 	--model_checkpoint_path "./save_dir/step7_1/training_loop_ckpt/scaled_model_easy_datasets" 
 
-step7_2: # Scaled up moodel: Train using curriculum learning approach 1 cont.(train on harder data now)
+step7_2: # Scaled up model: Train using curriculum learning approach 1 cont.(train on harder data now)
 	python3 argument_parser.py --load_model_load_tokenizer_and_train True \
 	--torch_training True \
 	--train_dataset_file_names ${harder_training_dataset_file_names} \
@@ -266,10 +266,44 @@ step7_2: # Scaled up moodel: Train using curriculum learning approach 1 cont.(tr
 	--training_batch_size 32 --num_workers 0 \
 	-lr "1e-4" --grad_norm_clip 1.0 --num_epochs 6 
 
-step7_3:  # Test the scaled up best model trained using curriculum learning
+step7_3:  # Test the scaled up best model trained using curriculum learning appraoch 1
 	python3 argument_parser.py --load_model_load_tokenizer_and_test  True \
 	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" \
-	--model_load_path "./save_dir/step7_2/training_loop_resumed_ckpt/scaled_model_hard_datasets/5" \
+	--model_load_path "./save_dir/step7_2/training_loop_resumed_ckpt/scaled_model_hard_datasets/0" \
 	--pretraining_task ${best_model_pretraining_task} \
 	--model_checkpoint_path "./save_dir/step7_3/testing" \
+	--testing_batch_size 16 --num_workers 0
+
+
+step8_1: # Scale up best model and train using curriculum learning approach2(train on hearder data first)
+	python3 argument_parser.py --create_model_load_tokenizer_train_and_save_model True \
+	--torch_training True \
+	--train_dataset_file_names ${harder_training_dataset_file_names} \
+	--validation_dataset_file_names ${all_dev_dataset_file_names} \
+	--test_dataset_file_names ${all_test_dataset_file_names} \
+	--transformer_model_name ${best_model_name} --pretraining_task ${best_model_pretraining_task} \
+	--training_batch_size 32 --num_workers 0 \
+	-lr "1e-4" --grad_norm_clip 1.0 --num_epochs 6 \
+	--hidden_size 256 --num_attention_heads 8 --num_hidden_layers 5 \
+	--model_checkpoint_path "./save_dir/step8_1/training_loop_ckpt/scaled_model2_harder_datasets" 
+
+step8_2: # Scaled up model: Train using curriculum learning appraoh 2 cont. (train on easier data now)
+	python3 argument_parser.py --load_model_load_tokenizer_and_train True \
+	--torch_training True \
+	--train_dataset_file_names ${easier_training_dataset_file_names} \
+	--validation_dataset_file_names ${all_dev_dataset_file_names} \
+	--test_dataset_file_names ${all_test_dataset_file_names} \
+	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" \
+	--model_load_path "./save_dir/step8_1/training_loop_ckpt/scaled_model2_harder_datasets/5" \
+	--model_checkpoint_path "./save_dir/step8_2/training_loop_resumed_ckpt/scaled_model2_easier_datasets" \
+	--pretraining_task ${best_model_pretraining_task} \
+	--training_batch_size 32 --num_workers 0 \
+	-lr "1e-4" --grad_norm_clip 1.0 --num_epochs 6 
+
+step8_3: # Test the scaled up best model trained using curriculum learning approach 2
+	python3 argument_parser.py --load_model_load_tokenizer_and_test  True \
+	--tokenizer_save_or_load_path "./save_dir/saved_tokenizer" \
+	--model_load_path "./save_dir/step8_2/training_loop_resumed_ckpt/scaled_model2_easier_datasets/5" \
+	--pretraining_task ${best_model_pretraining_task} \
+	--model_checkpoint_path "./save_dir/step8_3/testing" \
 	--testing_batch_size 16 --num_workers 0
