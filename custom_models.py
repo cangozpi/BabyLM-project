@@ -51,7 +51,7 @@ class CustomPreTrainingTransformerModel(PreTrainedModel):
         if labels is not None:
             loss = self.loss_fn(logits.reshape(-1, self.num_labels), labels.reshape(-1))
             per_loss = self.loss_fn2(logits.reshape(-1, self.num_labels), labels.reshape(-1))
-            self.per_input_losses.append((input_ids, per_loss))
+            self.per_input_losses.append((input_ids, per_loss, labels))
         return TokenClassifierOutput(loss=loss, logits=logits, hidden_states=outputs.hidden_states,
         attentions=outputs.attentions)
 
