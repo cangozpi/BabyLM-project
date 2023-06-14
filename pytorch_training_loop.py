@@ -75,7 +75,17 @@ def train_for_num_epochs_in_pytorch_loop(train_dataloader, model, num_epochs, lr
                 progress_bar.set_postfix(loss=np.mean(losses))
 
                 # progress_bar.set_postfix(loss=loss.item(), accuracy=100. * accuracy)
-        print(model.per_input_losses)
+        batches_dict = {}
+        for i in range(len(model.per_input_losses)):
+            inputs = [inputs_.cpu().numpy().tolist() for inputs_ in model.per_input_losses[i][0]]
+            inputs = [number for sublist in inputs for number in sublist]
+            labels = [label_.item() for label_ in model.per_input_losses[i][1]]
+            inputs_labels = {input_val: label_val for input_val, label_val in zip(inputs, labels)}
+            batches_dict.update(dict(sorted(inputs_labels.items(), key=lambda x: x[1])))
+
+        print(batches_dict)
+
+
         logger.log_scalar_to_tb(tag='Training/Loss (epoch)', scalar_value=np.mean(losses))
 
         val_losses = []
